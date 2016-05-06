@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>KidRouter</title>
+    <style>
+      html, body {
+        height: 90%;
+        margin: 15;
+        padding: 10;
+      }
+      #map {
+        height: 90%;
+        width: 100%;
+      }
+    </style>
+  </head>
+  
+  <image src="v0.jpg" align="left" hspace="10" vspace="10"></image> <image src="unnamed.jpg" align="right"></image>
+  <br>
+  <p>
+  KidRouter finds the walking route, from the starting and arrival points you enter below, that appears to be the least risky for your child.
+  Riskiness is based on the City of New York's database of crashes involving pedestrians.
+  <p>
+  <strong>If the map does not appear below, please refresh this page</strong>
+  <p>
+  <p>
+  <body>
+    <input id="start-input" class="controls" type="text" onchange="newStartPoint" placeholder="Departure Address">
+    <input id="arrival-input" class="controls" type="text" onchange="newEndPoint" placeholder="Arrival Address">
+    <div id="map"></div>
+ 
+    
+<script  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPFW1huXFj3wXyR-yGbJ7fy7Kqs2Aw19A&libraries=visualization,places">
+</script>   
+  
+<script>
+		// These variables are shared across all the Javascript code
+		var heatmapdata = [];
+		var totalNumberOfCrashes = 0;
+		var startPoint;
+		var endPoint;
+		var map;
+		var tinput;
+		var searchBox;
+		var allTextLines;
+		var searchBox2; 
+		
+		
+		// Get the file (a CSV file) listing the coordinates of all crashes
+		var rawFile = new XMLHttpRequest();
+		// The file is on the local computer for now.
+    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/Short_NYPD_Collisions.csv",false);
+    	rawFile.send(null);
+    	// Variable csv will contain all the text in the file
+		var csv = rawFile.responseText;
+		// Process the CSV file to make it an array of coordinates
+		processData(csv);
+		// Display the map 
+		displayMap();	
+		      		
+		function processData(csv) {
+			// First we cut all the text into lines separated by line returns, which can
+			// be marked by \r\n or by just \n
+			// Each line will be an element in array allTextLines.
+			allTextLines = csv.split(/\r\n|\n/);
+			// We split each line
+			var lines = [];
+			//var heatmapdata = [];
+			totalNumberOfCrashes = allTextLines.length - 1;
+			for (var i=1; i<allTextLines.length; i++) {
+				// We know the two data we need are separated by a ,
+				var data = allTextLines[i].split(',');
+				// As long as we have two pieces of data on each line, we have two 
+				// more coordinates to process
+				if (data.length == 2) {
+					var lat = Number(data[0]);
+					var lng = Number(data[1]);
+					// Create a point that Google understands
+					var point = new google.maps.LatLng( lat, lng);
+					// push that point to the end of the list (a list of crash sites)
+					heatmapdata.push(point);
+				}
+			}
+      	}
+        
+      	// This is where the real work is done
+      	// This function is called to display or redisplay the map.
+      	// We need to redisplay it when something has changed, for example
+      	// when the starting point is known, or when the routes have been calculated.
+       	function displayMap() {
+			var len;
+			var directionsDisplay;
+			var directionsService = new google.maps.DirectionsService();
+			// startPoint = new google.maps.LatLng(40.6674, -73.9745);
+			// var endPoint = new google.maps.LatLng(40.6824, -73.9955);
+					
+			directionsDisplay = new google.maps.DirectionsRenderer();
+			
+			// Coordinates of our home -- just to center the map at the beginning
+			var myLatLng = {lat: 40.6674, lng: -73.9745};
+			map = new google.maps.Map(document.getElementById('map'), {
+			  zoom: 14,
+			  center: myLatLng
+			});
+			directionsDisplay.setMap(map);
+		
+			// The crash locations are used to determine the least dangerous path,
+			// but we can also visualize them.  We create a heatmap just because it
+			// looks good, not because it is useful to routing.
+			var heatmap = new google.maps.visualization.HeatmapLayer({
+				data: heatmapdata
+			});
+			heatmap.setMap(map);
+		
+			// Set up a box to search the address of the starting point	
+			// We only indicate which function to call (newStartPoint) when this address
+			// is entered by the user.	
+			var tinput = document.getElementById('start-input');
+			searchBox = new google.maps.places.SearchBox(tinput);
+			var toutput = document.getElementById('arrival-input');
+			searchBox2 = new google.maps.places.SearchBox(toutput);
+			//var markers = [];
+			searchBox.addListener('places_changed', newStartPoint);
+			searchBox2.addListener('places_changed', newEndPoint);
+		
+			// Prepare the request to Google to give us a root from Point A to Point B.
+			// Note that initially, we don't have a startPoint!  The request will fail.
+			// But it will succeed when the start point is entered, after which DisplayMap
+			// will be called again to redisplay the map.
+			var request = {
+				origin: startPoint,
+				destination: endPoint,
+				provideRouteAlternatives: true,
+				travelMode: google.maps.TravelMode.WALKING
+			};
+			
+			// Now actually send the request for routes.  The function provided below indicates
+			// what to do with the routes returned.
+			directionsService.route(request, function(response, status) {
+				// OK, we have a response and a status.  What do we do now?
+				// First we check the status is OK. (Otherwise... report an error? TBD.)
+				if (status == google.maps.DirectionsStatus.OK) {
+				  i = 0;
+				  // How many routes were suggested by Google? That is the length of the
+				  // array "routes" contained in the response.
+				  len = response.routes.length;
+				  var route;
+				  // For each of these routes...
+				  for (route=0; route < len; route++) {
+					// How many legs for this route have?  (We should have 1, because
+					// we don't except back and forths) That number is the length of the
+					// array "legs" contained in the route-th element of the "routes" array
+					// contained in the response!
+					var numberOfLegs = response.routes[route].legs.length;
+					var routeColor = '#00FF00';
+					var ratio = 0;
+					// For each of these legs...
+					for (var leg = 0; leg< numberOfLegs; leg++){
+						// How many steps does this leg have?
+						var numberOfSteps = response.routes[route].legs[leg].steps.length; 
+						// For each of these steps...     		    
+						for (var step =0; step<numberOfSteps; step++){
+							// What is the start of that step?  Its location is contained 
+							// in the step-th step of array "steps" contained in the leg-th
+							// leg of array "legs" which itself, etc.
+							var startLoc = response.routes[route].legs[leg].steps[step].start_location;
+							var endLoc = response.routes[route].legs[leg].steps[step].end_location;   
+							// We delegate to another function the calculation of the number
+							// of crashes at the starting point of the step. (Its end point
+							// will be the starting point of the next step.)	         
+							crashCount = howManyCrashesAtLocation(startLoc);
+							// Is the number of crashes on that leg unusually high?
+							// Comparing with the other legs might be better.
+							// Here we just compare to the total of all crashes in NYC!
+							var legRatio = crashCount / totalNumberOfCrashes;
+							if (legRatio > ratio) {
+								ratio = legRatio;
+							}
+							
+						}
+					} // end of leg
+					
+					// Decide on a color.  To be improved
+					if (ratio < 0.01) {
+						routeColor = '#00FF00';
+					} else {
+						if (ratio < 0.05) {
+							routeColor = '#FF6060';
+						} else {
+							routeColor = '#FF0000';
+						}
+					}	
+					
+					// Now that we have the routes and their colors, draw them:
+					new google.maps.DirectionsRenderer({
+							map: map,
+							directions: response,
+							routeIndex: i,
+							polylineOptions: {
+								strokeColor: routeColor
+							}
+					});
+				
+					i++;
+				} //end of Route i 
+			   } // end status OK
+			});// end direcctionsSetvice
+      } //end of displayMap
+      
+      // This function counts how many crashes happened at the given location
+      function howManyCrashesAtLocation(location) {
+      	var numberOfCrash = 0;
+      	var locLat = location.lat();
+      	var locLng = location.lng();
+      	for (var i=0; i<heatmapdata.length; i++) {
+			var crashSite = heatmapdata[i];
+			var crashLat = crashSite.lat();
+			var crashLng = crashSite.lng();
+			if ((Math.abs(locLat - crashLat) < 0.002) && (Math.abs(locLng - crashLng) < 0.002)) {
+				numberOfCrash ++;
+				// Print message on the console.  Just for debugging
+				// console.log('This path goes through a crash site.');
+			}
+		}
+        return numberOfCrash;
+      }
+      
+      // This is the function called when the user enters the address of origin.
+      // Note that it ends with a call to function displayMap() te redraw the map.
+      function newStartPoint() {
+				var markers = [];
+				var places = searchBox.getPlaces();
+				if (places.length == 0) {
+				  return;
+			    }
+				var i=0;
+			    places.forEach(function(place) {
+			        // The search can return several places 
+			        // but only the first one is the starting point
+			         if (i==0) {
+			        	startPoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+			        	markers.push(new google.maps.Marker({
+					  		map: map,
+					  		title: place.name,
+					  		position: place.geometry.location
+						}));
+			        }
+			        i++;
+						
+				});
+				displayMap();
+      } // end of function newStartPoint
+        
+        // This is the function called when the user enters the address of arrival.
+      // Note that it ends with a call to function displayMap() to redraw the map.
+      function newEndPoint() {
+				var markers = [];
+				var places = searchBox2.getPlaces();
+				if (places.length == 0) {
+				  return;
+			    }
+				var i=0;
+			    places.forEach(function(place) {
+			        // The search can return several places 
+			        // but only the first one is the starting point
+			        if (i==0) {
+			        	endPoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+			        	markers.push(new google.maps.Marker({
+					  		map: map,
+					  		title: place.name,
+					  		position: place.geometry.location
+						}));
+			        }
+			        i++;
+						
+				});
+				displayMap();
+      } // end of function newEndPoint
+        
+</script>
+    
+
+
+  </body>
+</html>
