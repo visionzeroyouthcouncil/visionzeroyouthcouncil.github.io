@@ -182,10 +182,10 @@
 					} // end of leg
 					
 					// Decide on a color.  To be improved
-					if (ratio < 0.01) {
+					if (crashCount <1) {
 						routeColor = '#00FF00';
 					} else {
-						if (ratio < 0.05) {
+						if (crashCount < 3) {
 							routeColor = '#FF6060';
 						} else {
 							routeColor = '#FF0000';
