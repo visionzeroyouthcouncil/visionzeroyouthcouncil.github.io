@@ -146,6 +146,10 @@
 				  // array "routes" contained in the response.
 				  len = response.routes.length;
 				  var route;
+				  var crashesFoundOnRoute = [];
+				  var howManyCrashes;
+				  var maxOfCrashes = -1111; // dummy initial value to calculate the maximum
+
 				  // For each of these routes...
 				  for (route=0; route < len; route++) {
 					// How many legs for this route have?  (We should have 1, because
@@ -170,23 +174,23 @@
 							// of crashes at the starting point of the step. (Its end point
 							// will be the starting point of the next step.)	         
 							crashCount = howManyCrashesAtLocation(startLoc);
-							// Is the number of crashes on that leg unusually high?
-							// Comparing with the other legs might be better.
-							// Here we just compare to the total of all crashes in NYC!
-							var legRatio = crashCount / totalNumberOfCrashes;
-							if (legRatio > ratio) {
-								ratio = legRatio;
-							}
-							
+							howManyCrashes = howManyCrashes + crashCount;
 						}
 					} // end of leg
+					crashesFoundOnRoute.push(howManyCrashes);
+					if (maxOfCrashes < howManyCrashes) {
+						maxOfCrashes = howManyCrashes;
+					}
+				 } // end of loop on routes
 					
-					// Decide on a color.  To be improved
-					if (crashCount <5) {
+				 for (route=0; route < len; route++) {	
+					// Decide on a color.  
+					ratio = crashesFoundOnRoute[route]/maxOfCrashes;
+					if (ratio < 0.8) {
 						routeColor = '#00FF00';
 					} else {
-						if (crashCount < 10) {
-							routeColor = '#006060';
+						if (ratio < 0.9) {
+							routeColor = '#101060';
 						} else {
 							routeColor = '#FF0000';
 						}
@@ -196,14 +200,15 @@
 					new google.maps.DirectionsRenderer({
 							map: map,
 							directions: response,
-							routeIndex: i,
+							routeIndex: route,
 							polylineOptions: {
 								strokeColor: routeColor
 							}
 					});
 				
+				
 					i++;
-				} //end of Route i 
+				 } //end of Route  
 			   } // end status OK
 			});// end direcctionsSetvice
       } //end of displayMap
