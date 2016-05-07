@@ -149,7 +149,7 @@
 				  var crashesFoundOnRoute = [];
 				  var howManyCrashes;
 				  var maxOfCrashes = -1111; // dummy initial value to calculate the maximum
-
+   				  var minOfCrashes =995969569;
 				  // For each of these routes...
 				  for (route=0; route < len; route++) {
 					// How many legs for this route have?  (We should have 1, because
@@ -182,19 +182,23 @@
 					if (maxOfCrashes < howManyCrashes) {
 						maxOfCrashes = howManyCrashes;
 					}
+					if (howManyCrashes  < minOfCrashes) {
+						minOfCrashes = howManyCrashes;
+					}
 				 } // end of loop on routes
 					
+				 var crashesOnRoute;	
 				 for (route=0; route < len; route++) {	
 					// Decide on a color.  
-					ratio = crashesFoundOnRoute[route]/maxOfCrashes;
-					if (ratio < 0.8) {
-						routeColor = '#00FF00';
+					crashesOnRoute = crashesFoundOnRoute[route];
+					if (crashesOnRoute == minOfCrashes) {
+						routeColor = '#00FF00';  // Code for green
 					} else {
-						if (ratio < 0.9) {
-							routeColor = '#101060';
+						if (crashesOnRoute == maxOfCrashes) {
+							routeColor = '#FF0000';  // Code for red
 						} else {
-							routeColor = '#FF0000';
-						}
+							routeColor = '#101060';
+						} 
 					}	
 					
 					// Now that we have the routes and their colors, draw them:
@@ -206,7 +210,6 @@
 								strokeColor: routeColor
 							}
 					});
-				
 				
 					i++;
 				 } //end of Route  
