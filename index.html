@@ -64,7 +64,7 @@
 		var rawFile = new XMLHttpRequest();
 		// The file is on the local computer for now.
     	//rawFile.open("GET", "http://localhost:8000/NYPD_Collisions.csv",false);
-    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/nyc.csv",false);
+    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/NYPD_Collisions.csv",false);
 
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
@@ -73,7 +73,7 @@
 		processData(csv);
 		
 		rawFile = new XMLHttpRequest();
-		rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/PittsburghLonglat.csv",false);
+		rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/PittsburghLongLat.csv",false);
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		var csv2 = rawFile.responseText;
@@ -268,7 +268,7 @@
 	  function Pittsburgh () {
 	  	heatmapdata = [];
 	  	var rawFile = new XMLHttpRequest();
-		rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/PittsburghLonglat.csv",false);
+		rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/PittsburghLongLat.csv",false);
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		var csv2 = rawFile.responseText;
