@@ -64,7 +64,7 @@
 		var rawFile = new XMLHttpRequest();
 		// The file is on the local computer for now.
     	//rawFile.open("GET", "http://localhost:8000/NYPD_Collisions.csv",false);
-    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/NYPD_Collisions.csv",false);
+    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/Short_NYPD_Collisions.csv",false);
 
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
@@ -252,7 +252,7 @@
         // Get the file (a CSV file) listing the coordinates of all crashes
 		var rawFile = new XMLHttpRequest();
 		// The file is on the local computer for now.
-    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/NYPD_Collisions.csv",false);
+    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/Short_NYPD_Collisions.csv",false);
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		var csv = rawFile.responseText;
