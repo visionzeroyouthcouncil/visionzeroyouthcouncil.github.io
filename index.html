@@ -7,7 +7,7 @@
     <style>
       html, body {
         height: 90%;
-        margin: 35;
+        margin: 10;
         padding: 10;
       }
       #map {
@@ -17,17 +17,28 @@
     </style>
   </head>
   
-  <image src="v0.jpg" align="left" hspace="5" vspace="4"></image> <image src="unnamed.jpg" align="right" hspace="5" vspace="5"></image>
+
+  
+<image src="v0.jpg" align="left" hspace="5" vspace="4"></image> <image src="unnamed.jpg" align="right" hspace="5" vspace="5"></image>
   <br>
-  <p>KidRouter finds the least dangerous route for pedestrians, based on the <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95">City of New York's database of crashes</a> involving pedestrians.
+  <p>KidRouter finds the least dangerous route for pedestrians in New York City, Pittsburgh, and Baton Rouge. 
+  Data for New York City are based on the <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95">City of New York's database of crashes</a> involving pedestrians.
+  Data for Pittsburgh are based on <a href="https://catalog.data.gov/dataset/allegheny-county-crash-data"> City of Pittsburgh's database of crashes </a> involving pedestrians.
+  Data for Baton Rouge are based on <a href="https://catalog.data.gov/dataset/baton-rouge-traffic-incidents"> City of Baton Rouge's database of crashes </a> involving pedestrians.
+   
   <p>
   <strong>If the map does not appear below, please refresh this page</strong>
   <p>
   Color Code Key: <br> Red = Most dangerous <br> Yellow = Not the safest, but not the most dangerous either <br> Green = Safest 
   <p>
+
+<button onclick="NewYorkCity()">New York City</button>
+<button onclick="Pittsburgh()">Pittsburgh</button>
+<button onclick="BatonRouge()">Baton Rouge</button>
+  <p>
   <body>
-    <input id="start-input" class="controls" type="text" size="70" onchange="newStartPoint" placeholder="Departure Address">
-    <input id="arrival-input" class="controls" type="text" size="70" onchange="newEndPoint" placeholder="Arrival Address">
+    <input id="start-input" class="controls" type="text" size="70"  onchange="newStartPoint" placeholder="Departure Address">
+    <input id="arrival-input" class="controls" type="text" size="70"  onchange="newEndPoint" placeholder="Arrival Address">
     <div id="map"></div>
  
     
@@ -37,6 +48,7 @@
 <script>
 		// These variables are shared across all the Javascript code
 		var heatmapdata = [];
+		var heatmapdata2 = [];
 		var totalNumberOfCrashes = 0;
 		var startPoint;
 		var endPoint;
@@ -45,17 +57,38 @@
 		var searchBox;
 		var allTextLines;
 		var searchBox2; 
-		
+		var zoomFactor = 4;
+		var latitude = 40.6674;
+		var longitude = -104;
 		
 		// Get the file (a CSV file) listing the coordinates of all crashes
 		var rawFile = new XMLHttpRequest();
 		// The file is on the local computer for now.
-    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/Short_NYPD_Collisions.csv",false);
+    	//rawFile.open("GET", "http://localhost:8000/NYPD_Collisions.csv",false);
+    	rawFile.open("GET", "http://localhost:8000/nyc.csv",false);
+
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		var csv = rawFile.responseText;
 		// Process the CSV file to make it an array of coordinates
 		processData(csv);
+		
+		rawFile = new XMLHttpRequest();
+		rawFile.open("GET", "http://localhost:8000/PittsburghLonglat.csv",false);
+    	rawFile.send(null);
+    	// Variable csv will contain all the text in the file
+		var csv2 = rawFile.responseText;
+		// Process the CSV file to make it an array of coordinates
+		processData(csv2);
+		
+		rawFile = new XMLHttpRequest();
+		rawFile.open("GET", "http://localhost:8000/Baton_Rouge2.csv",false);
+    	rawFile.send(null);
+    	// Variable csv will contain all the text in the file
+		csv2 = rawFile.responseText;
+		// Process the CSV file to make it an array of coordinates
+		processData(csv2);
+		
 		// Display the map 
 		displayMap();	
 		      		
@@ -84,6 +117,8 @@
 			}
       	}
         
+
+        
       	// This is where the real work is done
       	// This function is called to display or redisplay the map.
       	// We need to redisplay it when something has changed, for example
@@ -97,9 +132,14 @@
 					
 			directionsDisplay = new google.maps.DirectionsRenderer();
 			
-			var myLatLng = {lat: 40.674, lng: -73.9845};
+			// Coordinates of our home -- just to center the map at the beginning
+			//var myLatLng = {lat: 40.6674, lng: -73.9745};
+			var myLatLng = {
+			  lat: latitude, 
+			  lng: longitude
+			};
 			map = new google.maps.Map(document.getElementById('map'), {
-			  zoom: 14,
+			  zoom: zoomFactor,
 			  center: myLatLng
 			});
 			directionsDisplay.setMap(map);
@@ -111,6 +151,7 @@
 				data: heatmapdata
 			});
 			heatmap.setMap(map);
+			//heatmap.set('radius', 20);
 		
 			// Set up a box to search the address of the starting point	
 			// We only indicate which function to call (newStartPoint) when this address
@@ -145,10 +186,6 @@
 				  // array "routes" contained in the response.
 				  len = response.routes.length;
 				  var route;
-				  var crashesFoundOnRoute = [];
-				  var howManyCrashes;
-				  var maxOfCrashes = -1111; // dummy initial value to calculate the maximum
-   				  var minOfCrashes =995969569;
 				  // For each of these routes...
 				  for (route=0; route < len; route++) {
 					// How many legs for this route have?  (We should have 1, because
@@ -158,7 +195,6 @@
 					var numberOfLegs = response.routes[route].legs.length;
 					var routeColor = '#00FF00';
 					var ratio = 0;
-					howManyCrashes =0;
 					// For each of these legs...
 					for (var leg = 0; leg< numberOfLegs; leg++){
 						// How many steps does this leg have?
@@ -174,48 +210,94 @@
 							// of crashes at the starting point of the step. (Its end point
 							// will be the starting point of the next step.)	         
 							crashCount = howManyCrashesAtLocation(startLoc);
-							howManyCrashes = howManyCrashes + crashCount;
+							// Is the number of crashes on that leg unusually high?
+							// Comparing with the other legs might be better.
+							// Here we just compare to the total of all crashes in NYC!
+							var legRatio = crashCount / totalNumberOfCrashes;
+							if (legRatio > ratio) {
+								ratio = legRatio;
+							}
+							
 						}
 					} // end of leg
-					crashesFoundOnRoute.push(howManyCrashes);
-					if (maxOfCrashes < howManyCrashes) {
-						maxOfCrashes = howManyCrashes;
-					}
-					if (howManyCrashes  < minOfCrashes) {
-						minOfCrashes = howManyCrashes;
-					}
-				 } // end of loop on routes
 					
-				 var crashesOnRoute;	
-				 for (route=0; route < len; route++) {	
-					// Decide on a color.  
-					crashesOnRoute = crashesFoundOnRoute[route];
-					if (crashesOnRoute == minOfCrashes) {
-						routeColor = '#00FF00';  // Code for green
+					// Decide on a color.  To be improved
+					if (ratio < 0.01) {
+						routeColor = '#00FF00';
 					} else {
-						if (crashesOnRoute == maxOfCrashes) {
-							routeColor = '#FF0000';  // Code for red
+						if (ratio < 0.05) {
+							routeColor = '#FF6060';
 						} else {
-							routeColor = '#FFcc00';
-						} 
+							routeColor = '#FF0000';
+						}
 					}	
 					
 					// Now that we have the routes and their colors, draw them:
 					new google.maps.DirectionsRenderer({
 							map: map,
 							directions: response,
-							routeIndex: route,
+							routeIndex: i,
 							polylineOptions: {
 								strokeColor: routeColor
 							}
 					});
 				
 					i++;
-				 } //end of Route  
+				} //end of Route i 
 			   } // end status OK
 			});// end direcctionsSetvice
       } //end of displayMap
       
+      function NewYorkCity () {
+      	heatmapdata = [];
+        // Get the file (a CSV file) listing the coordinates of all crashes
+		var rawFile = new XMLHttpRequest();
+		// The file is on the local computer for now.
+    	rawFile.open("GET", "http://localhost:8000/NYPD_Collisions.csv",false);
+    	rawFile.send(null);
+    	// Variable csv will contain all the text in the file
+		var csv = rawFile.responseText;
+		// Process the CSV file to make it an array of coordinates
+		processData(csv);
+		zoomFactor= 10;
+		latitude = 40.6674;
+		longitude = -73.9745;
+		displayMap();	
+
+	  }
+	  
+	  function Pittsburgh () {
+	  	heatmapdata = [];
+	  	var rawFile = new XMLHttpRequest();
+		rawFile.open("GET", "http://localhost:8000/PittsburghLonglat.csv",false);
+    	rawFile.send(null);
+    	// Variable csv will contain all the text in the file
+		var csv2 = rawFile.responseText;
+		// Process the CSV file to make it an array of coordinates
+		processData(csv2);	
+		zoomFactor= 10;
+		latitude = 40.44;
+		longitude = -80;
+		displayMap();	
+
+      }  
+      
+      function BatonRouge () {
+	  	heatmapdata = [];
+	  	var rawFile = new XMLHttpRequest();
+		rawFile.open("GET", "http://localhost:8000/Baton_Rouge2.csv",false);
+    	rawFile.send(null);
+    	// Variable csv will contain all the text in the file
+		var csv2 = rawFile.responseText;
+		// Process the CSV file to make it an array of coordinates
+		processData(csv2);	
+		zoomFactor= 11;
+		latitude = 30.5134;
+		longitude = -91.1415;
+		displayMap();	
+		
+	  }
+    
       // This function counts how many crashes happened at the given location
       function howManyCrashesAtLocation(location) {
       	var numberOfCrash = 0;
@@ -223,6 +305,16 @@
       	var locLng = location.lng();
       	for (var i=0; i<heatmapdata.length; i++) {
 			var crashSite = heatmapdata[i];
+			var crashLat = crashSite.lat();
+			var crashLng = crashSite.lng();
+			if ((Math.abs(locLat - crashLat) < 0.002) && (Math.abs(locLng - crashLng) < 0.002)) {
+				numberOfCrash ++;
+				// Print message on the console.  Just for debugging
+				// console.log('This path goes through a crash site.');
+			}
+		}
+        for (var i=0; i<heatmapdata2.length; i++) {
+			var crashSite = heatmapdata2[i];
 			var crashLat = crashSite.lat();
 			var crashLng = crashSite.lng();
 			if ((Math.abs(locLat - crashLat) < 0.002) && (Math.abs(locLng - crashLng) < 0.002)) {
