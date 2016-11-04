@@ -64,7 +64,7 @@
 		var rawFile = new XMLHttpRequest();
 		// The file is on the local computer for now.
     	//rawFile.open("GET", "http://localhost:8000/NYPD_Collisions.csv",false);
-    	rawFile.open("GET", "http://localhost:8000/nyc.csv",false);
+    	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/nyc.csv",false);
 
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
@@ -73,7 +73,7 @@
 		processData(csv);
 		
 		rawFile = new XMLHttpRequest();
-		rawFile.open("GET", "http://localhost:8000/PittsburghLonglat.csv",false);
+		rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/PittsburghLonglat.csv",false);
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		var csv2 = rawFile.responseText;
@@ -81,7 +81,7 @@
 		processData(csv2);
 		
 		rawFile = new XMLHttpRequest();
-		rawFile.open("GET", "http://localhost:8000/Baton_Rouge2.csv",false);
+		rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/Baton_Rouge2.csv",false);
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		csv2 = rawFile.responseText;
