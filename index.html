@@ -59,13 +59,13 @@
 		var zoomFactor = 4;
 		var latitude = 40.6674;
 		var longitude = -104;
+		var ratioThreshold = 0.01;
 		
 		// Get the file (a CSV file) listing the coordinates of all crashes
 		var rawFile = new XMLHttpRequest();
 		// The file is on the local computer for now.
     	//rawFile.open("GET", "http://localhost:8000/NYPD_Collisions.csv",false);
     	rawFile.open("GET", "http://visionzeroyouthcouncil.github.io/Short_NYPD_Collisions.csv",false);
-
     	rawFile.send(null);
     	// Variable csv will contain all the text in the file
 		var csv = rawFile.responseText;
@@ -116,7 +116,6 @@
 			}
       	}
         
-
         
       	// This is where the real work is done
       	// This function is called to display or redisplay the map.
@@ -221,10 +220,10 @@
 					} // end of leg
 					
 					// Decide on a color.  To be improved
-					if (ratio < 0.01) {
+					if (ratio < ratioThreshold) {
 						routeColor = '#00FF00';
 					} else {
-						if (ratio < 0.05) {
+						if (ratio < ratioThreshold * 5) {
 							routeColor = '#FF6060';
 						} else {
 							routeColor = '#FF0000';
@@ -261,8 +260,8 @@
 		zoomFactor= 10;
 		latitude = 40.6674;
 		longitude = -73.9745;
+		ratioThreshold = 0.0001;
 		displayMap();	
-
 	  }
 	  
 	  function Pittsburgh () {
@@ -277,8 +276,8 @@
 		zoomFactor= 10;
 		latitude = 40.44;
 		longitude = -80;
+		ratioThreshold = 0.004;
 		displayMap();	
-
       }  
       
       function BatonRouge () {
@@ -293,6 +292,7 @@
 		zoomFactor= 11;
 		latitude = 30.5134;
 		longitude = -91.1415;
+		ratioThreshold = 0.04;
 		displayMap();	
 		
 	  }
