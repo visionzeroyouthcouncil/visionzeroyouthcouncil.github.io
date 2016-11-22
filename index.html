@@ -224,10 +224,14 @@ Please select your city:
 					if (ratio < ratioThreshold) {
 						routeColor = '#00FF00';
 					} else {
-						if (ratio < ratioThreshold * 5) {
+						if (ratio < ratioThreshold * 4) {
 							routeColor = '#FF6060';
 						} else {
-							routeColor = '#FF0000';
+						    if (ratio < ratioThreshold * 8) {
+							   routeColor = '#FFF060';
+						    } else {
+								routeColor = '#FF0000';
+							}
 						}
 					}	
 					
@@ -261,7 +265,7 @@ Please select your city:
 		zoomFactor= 10;
 		latitude = 40.6674;
 		longitude = -73.9745;
-		ratioThreshold = 0.0002;
+		ratioThreshold = 0.0001;
 		displayMap();	
 	  }
 	  
@@ -277,7 +281,7 @@ Please select your city:
 		zoomFactor= 10;
 		latitude = 40.44;
 		longitude = -80;
-		ratioThreshold = 0.004;
+		ratioThreshold = 0.003;
 		displayMap();	
       }  
       
@@ -293,7 +297,7 @@ Please select your city:
 		zoomFactor= 11;
 		latitude = 30.5134;
 		longitude = -91.1415;
-		ratioThreshold = 0.04;
+		ratioThreshold = 0.003;
 		displayMap();	
 		
 	  }
